@@ -123,6 +123,11 @@ class User extends Authenticatable
         return Micropost::whereIn('user_id', $userIds);
     }
     
+    
+    
+    //以下、favorite
+    
+    
     public function favorites(){
         return $this->belongsToMany(Micropost::class,"favorite","user_id","micropost_id")->withTimestamps();
     }
@@ -130,7 +135,7 @@ class User extends Authenticatable
     
     public function favorite($micropostId){
         $exist=$this->is_favorite($micropostId);
-        //its_me的なやつあえて外してみた。いらんと思った。
+        //its_meあえて外してみた。いらんと思った。
         if($exist){
             return false;
         }else{
@@ -152,8 +157,24 @@ class User extends Authenticatable
         }
     }
     
+    
     public function is_favorite($micropostId){
         return $this->favorites()->where("micropost_id",$micropostId)->exists();
+        /*where関数の第一引数が、$thisユーザーがお気に入り登録しているmicropostのID。第二引数が、is_favorite関数の引数。これらがイコール関係であれば、
+        ユーザーは既にその投稿をお気に入りしているということ。*/
     }
+    
+    
+    public function feed_favorites()
+    {
+        // このユーザがフォロー中のユーザのidを取得して配列にする
+        $userIds = $this->favorites()->pluck('microposts.id')->toArray();
+        // このユーザのidもその配列に追加
+        $userIds[] = $this->id;
+        // それらのユーザが所有する投稿に絞り込む
+        return Micropost::whereIn('user_id', $userIds);
+    }
+    
+    
     
 }
